@@ -26,7 +26,7 @@ const giwa = defineChain({
   blockExplorers: { default: { name: "GIWA Explorer", url: dep.chain.blockExplorerUrl } },
 });
 
-const data = new AmmoraDataApiClient(DATA_API);
+
 const publicClient = createPublicClient({ chain: giwa, transport: http() });
 const show = (v: unknown) => JSON.stringify(v, (_, x) => (typeof x === "bigint" ? x.toString() : x), 2);
 
