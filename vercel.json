@@ -1,5 +1,0 @@
-{
-  "rewrites": [
-    { "source": "/ammora-api/:path*", "destination": "https://ammora-giwa-sepolia-data.fly.dev/:path*" }
-  ]
-}
