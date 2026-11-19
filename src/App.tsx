@@ -5,9 +5,12 @@ import { createPublicClient, createWalletClient, custom, defineChain, http } fro
 import {
   AmmoraDataApiClient,
   buildCreateAmmoraV4Launch,
+  getAmmoraV4ConfigAtBlock,
+  getAmmoraV4NextConfigId,
   giwaSepoliaPermissionless,
   parseAmmoraV4LaunchCreatedReceipt,
 } from "@ammora-protocol/sdk";
+
 
 const dep = giwaSepoliaPermissionless;
 const FACTORY = dep.contracts.launch.factory as `0x${string}`;
@@ -61,12 +64,18 @@ async function refresh() {
 
 async function loadConfig() {
   try {
-    const page: any = await getJson(`/v1/amm/configs/v4?chainId=${CHAIN_ID}&registry=${REGISTRY}&enabled=true`);
-    const items: any[] = Array.isArray(page) ? page : page?.items ?? page?.data ?? [];
-    if (items.length) setConfigId(String(items[0].configId));
-    else setStatus("No enabled launch config found on this registry.");
+    const pc = publicClient as any;
+    const block = await pc.getBlockNumber();
+    const next = await getAmmoraV4NextConfigId(pc, REGISTRY, block);
+    for (let id = next - 1n; id >= 0n && id > next - 40n; id--) {
+      try {
+        const snap = await getAmmoraV4ConfigAtBlock(pc, REGISTRY, id, block);
+        if (snap.enabled) { setConfigId(String(id)); return; }
+      } catch {}
+    }
+    setStatus("No enabled launch config found.");
   } catch (e: any) {
-    setStatus(`Could not load configs: ${e.message}`);
+    setStatus(`Could not read configs: ${e.message}`);
   }
 }
 
